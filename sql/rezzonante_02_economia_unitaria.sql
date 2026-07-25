@@ -4,24 +4,24 @@
 -- Eleazar Soto | 2017-2026
 -- ============================================================
 -- Base de datos: Rezzonante_Producciones.db (SQLite)
--- Versión: base final v54, auditada y corregida
+-- Versión: v57 — incluye patrocinios en efectivo sumados al
+-- ingreso, y corrección de gastos de producción reales.
 -- ============================================================
 --
 -- CoNVO (Shron — Thinking with Data)
 --   Contexto: el Análisis 1 mostró que el ingreso crece más rápido
---             que el número de eventos — pero nunca se había restado
---             el costo real (pago a artistas + gastos de producción).
+--             que el número de eventos.
 --   Necesidad: ¿el crecimiento de ingreso se traduce en más ganancia
 --              real, o el costo por evento crece a la par?
 --   Visión: margen % por año, y su causa (eventos de alto costo fijo).
 --   Outcome: insumo para decisiones de tarifas de cara a 2027.
 --
--- NOTA DE PROCESO: gastos_produccion_mxn y pago_artistas_mxn fueron
--- corregidos exhaustivamente junto con el dueño del negocio —
--- tarifas por categoría/sede, fórmulas rotas por edición manual,
--- errores de captura, y casos donde un patrocinador cubrió el costo
--- del evento directamente (esos conciertos muestran margen exacto
--- de $0 por diseño, no por coincidencia).
+-- NOTA DE PROCESO: esta versión incorpora patrocinios en efectivo
+-- (LCS, La Cochera Cultural, Lakeside News) que no estaban
+-- capturados en versiones anteriores de la base, y una corrección
+-- de gasto de producción real (Kako Brenes Quintet, de $20,000
+-- estimados a $10,000 reales). Ambos cambios fueron confirmados con
+-- el dueño del negocio antes de aplicarse.
 --
 -- ============================================================
 
@@ -44,15 +44,15 @@ ORDER BY anio ASC;
 -- Resultado:
 -- anio | ingreso  | pago_artistas | gastos  | margen  | margen_pct
 -- 2017 |   5,200  |     5,200     |     0   |      0  |    0.0
--- 2018 | 317,300  |   147,500     | 118,000 |  51,800 |   16.3
--- 2019 | 354,700  |   146,550     | 104,000 | 104,150 |   29.4   <- mejor margen histórico
+-- 2018 | 357,300  |   147,500     | 118,000 |  91,800 |   25.7
+-- 2019 | 358,550  |   147,550     | 102,500 | 108,500 |   30.3   <- mejor margen histórico
 -- 2020 | 167,350  |    61,500     |  61,000 |  44,850 |   26.8
--- 2021 | 124,050  |    64,500     |  32,000 |  27,550 |   22.2
--- 2022 | 289,600  |   168,000     |  49,000 |  72,600 |   25.1
--- 2023 | 252,100  |   152,000     |  46,000 |  54,100 |   21.5
--- 2024 | 480,150  |   266,000     | 169,000 |  45,150 |    9.4
--- 2025 | 519,400  |   257,750     | 166,010 |  95,640 |   18.4
--- 2026 | 229,050  |   103,000     | 112,000 |  14,050 |    6.1   (parcial)
+-- 2021 | 132,450  |    64,500     |  32,000 |  35,950 |   27.1
+-- 2022 | 299,000  |   168,000     |  49,000 |  82,000 |   27.4
+-- 2023 | 270,400  |   152,000     |  46,000 |  72,400 |   26.8
+-- 2024 | 493,650  |   266,000     | 169,000 |  58,650 |   11.9
+-- 2025 | 519,400  |   257,750     | 156,010 | 105,640 |   20.3
+-- 2026 | 294,300  |   103,000     | 112,000 |  79,300 |   26.9   (parcial)
 
 
 -- ------------------------------------------------------------
@@ -68,7 +68,7 @@ GROUP BY anio
 ORDER BY anio ASC;
 
 -- Resultado: 2024 (8) y 2025 (7) siguen concentrando más eventos de
--- alto costo que cualquier año entre 2020 y 2023 (1-2 cada uno).
+-- alto costo que cualquier año 2020-2023 (1-2 cada uno).
 
 
 -- ------------------------------------------------------------
@@ -82,34 +82,36 @@ WHERE ingreso_estimado_mxn IS NOT NULL
   AND (ingreso_estimado_mxn - pago_artistas_mxn - gastos_produccion_mxn) < 0
 ORDER BY margen ASC;
 
--- Resultado: 24 de 132 conciertos con dato completo (18.2%) operan
--- con pérdida individual — bajó de 32 (24.2%) tras corregir tarifas
--- y errores de captura. El mayor caso: Cienfuegos (2018, Plaza
--- Principal Ajijic, -$20,000).
+-- Resultado: 18 de 133 conciertos con dato completo (13.5%) — bajó
+-- de 24 (18.2%) tras sumar patrocinios y corregir gastos reales.
+-- Los dos casos de mayor pérdida (Cienfuegos y Zambomba Flamenca,
+-- -$20,000 cada uno) son shows de sede externa sin patrocinio
+-- documentado — candidatos naturales para buscar patrocinio futuro.
+-- Nota: C002 (Triálogo) aparece con -$7,000 por diseño — su ingreso
+-- de taquilla vive en C001 (misma noche de festival); su costo
+-- individual no debe leerse aislado del evento completo.
 
 
 -- ============================================================
 -- HALLAZGO
 -- ============================================================
--- "Ningún año de Rezzonante cierra en números rojos — pero el
---  margen se comprime justo en los años de mayor ingreso bruto."
+-- "Con los patrocinios ya capturados, ningún año tiene margen bajo
+--  15% — pero 2024 sigue siendo el año de menor eficiencia (11.9%),
+--  justo el de mayor volumen de eventos de alto costo (8)."
 --
--- Con la base de datos ya depurada por completo, el panorama
--- financiero de Rezzonante es más sano de lo que sugerían las
--- primeras estimaciones: los 9 años completos muestran margen
--- positivo, con un histórico de 18.6%. Sin embargo, el patrón de
--- fondo se sostiene: 2019 (29.4%) y 2020 (26.8%) — años de menor
--- ingreso bruto — superan por mucho a 2024 (9.4%), el año de mayor
--- facturación histórica. La causa es la misma de siempre: 2024 y
--- 2025 concentran más eventos de alto costo fijo (8 y 7) que
--- cualquier año anterior a la pandemia.
+-- Antes de capturar patrocinios, el panorama financiero de
+-- Rezzonante parecía más débil de lo que realmente es: dos de los
+-- eventos que antes figuraban como pérdidas (Michele Tino Sexteto y
+-- Kako Brenes Quintet) en realidad eran rentables — solo faltaba
+-- registrar el patrocinio recibido. El margen histórico total subió
+-- de 18.6% a 23.4% con la base ya corregida.
 --
--- Casi 1 de cada 5 conciertos (18.2%) sigue perdiendo dinero de
--- forma individual, aunque la proporción bajó tras la limpieza de
--- datos — la mayoría son shows pequeños donde el costo de
--- producción o el pago a artistas supera la taquilla real.
+-- El patrón de fondo se mantiene: 2019 (30.3%) sigue siendo el año
+-- de mejor margen, y 2024 el de menor eficiencia relativa, por la
+-- misma causa de siempre — concentración de eventos de alto costo.
 --
--- Pregunta abierta para 2027: ¿vale la pena seguir aumentando la
--- frecuencia de eventos internacionales de alto costo si diluyen
--- el margen, o conviene volver a una mezcla más parecida a 2019-2020?
+-- Pregunta abierta para 2027: dado que el patrocinio puede revertir
+-- por completo un evento de "pérdida" a "ganancia", ¿conviene buscar
+-- patrocinio específicamente para los eventos de alto costo antes de
+-- programarlos, en vez de descubrir el patrocinio después?
 -- ============================================================

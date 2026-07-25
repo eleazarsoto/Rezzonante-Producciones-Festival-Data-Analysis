@@ -98,7 +98,7 @@ GROUP BY origen;
 
 -- Resultado:
 -- origen         | conciertos | asistencia_promedio
--- Internacional  |     45     |        115
+-- Internacional  |     45     |        117
 -- Nacional       |    127     |         72
 --
 -- Nota metodológica: un concierto con alineación mixta cuenta como
@@ -114,7 +114,7 @@ GROUP BY origen;
 -- HALLAZGO
 -- ============================================================
 -- "Los conciertos con artistas internacionales atraen 60% más
---  público que los 100% nacionales — 115 asistentes en promedio
+--  público que los 100% nacionales — 117 asistentes en promedio
 --  contra 72."
 --
 -- Rezzonante trabajó con 143 artistas de 15 países en 9 años; casi

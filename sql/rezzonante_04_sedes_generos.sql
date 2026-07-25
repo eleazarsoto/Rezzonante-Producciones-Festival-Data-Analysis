@@ -4,13 +4,12 @@
 -- Eleazar Soto | 2017-2026
 -- ============================================================
 -- Base de datos: Rezzonante_Producciones.db (SQLite)
--- Tabla principal: conciertos
+-- Versión: v57 — incluye patrocinios en efectivo
 -- ============================================================
 --
 -- CoNVO (Shron — Thinking with Data)
 --   Contexto: Rezzonante ha operado en más de 20 sedes y 9 géneros
---             musicales en 9 años, pero nunca se ha visto
---             sistemáticamente qué combinación rinde mejor.
+--             musicales en 9 años.
 --   Necesidad: ¿qué sede genera más ingreso, qué género tiene mejor
 --              margen, y hay una combinación que se destaque?
 --   Visión: ranking de sedes por ingreso, ranking de géneros por
@@ -35,18 +34,13 @@ ORDER BY ingreso DESC
 LIMIT 8;
 
 -- Resultado (top 3):
--- La Cochera Cultural     | 89 eventos | $1,895,600 | $21,299/evento  <- tu casa, volumen
--- Auditorio de la Ribera  |  7 eventos |   $483,300 | $69,043/evento  <- sede premium
--- Garden of Dreams        |  5 eventos |   $217,000 | $43,400/evento  <- sede premium
---
--- La Cochera genera el 69% del ingreso histórico por volumen, pero
--- el Auditorio de la Ribera rinde 3.2x más ingreso por evento —
--- son modelos de negocio distintos (frecuencia vs. eventos grandes).
+-- La Cochera Cultural     | 89 eventos | $2,000,300 | $22,475/evento
+-- Auditorio de la Ribera  |  7 eventos |   $471,050 | $67,293/evento  <- sede premium
+-- Garden of Dreams        |  5 eventos |   $262,250 | $52,450/evento  <- sede premium
 
 
 -- ------------------------------------------------------------
--- Query 2 — Margen % por género (solo géneros con 5+ conciertos,
--- para evitar que un género de 1-2 conciertos distorsione el ranking)
+-- Query 2 — Margen % por género (solo géneros con 5+ conciertos)
 -- ------------------------------------------------------------
 SELECT
     genero,
@@ -61,24 +55,22 @@ HAVING COUNT(*) >= 5
 ORDER BY margen_pct DESC;
 
 -- Resultado:
--- Jazz Tradicional                 | 17 conciertos | $352,400 | 43.5%  <- el más rentable
--- Improvisación libre - Free Jazz  |  8 conciertos | $168,250 | 23.4%
--- Jazz Contemporáneo Original      | 50 conciertos | $1,138,850 | 18.1%  <- el más frecuente
--- Flamenco Tradicional             | 32 conciertos | $850,600 | 15.5%
+-- Jazz Tradicional                 | 17 conciertos | $360,200   | 44.8%  <- el más rentable
+-- Jazz Contemporáneo Original      | 51 conciertos | $1,267,150 | 25.4%
+-- Improvisación libre - Free Jazz  |  8 conciertos | $172,150   | 25.1%
+-- Flamenco Tradicional             | 32 conciertos | $869,300   | 17.3%
 --
--- El género dominante en volumen (Jazz Contemporáneo Original, 38%
--- de la programación) NO es el más rentable — rinde menos de la
--- mitad de margen que Jazz Tradicional, que representa solo el 13%.
+-- Nota de proceso: el margen de Jazz Contemporáneo Original subió de
+-- 18.1% a 25.4% al capturar el patrocinio de Lakeside News para el
+-- Francesco Diodati Quinteto ($35,000) — un solo patrocinio bien
+-- documentado puede mover el margen de un género completo.
 
 
 -- ------------------------------------------------------------
--- Query 3 — El reto: mejor combinación sede + género
--- (mínimo 3 conciertos, para descartar combinaciones anecdóticas)
+-- Query 3 — El reto: mejor combinación sede + género (mínimo 3 conciertos)
 -- ------------------------------------------------------------
 SELECT
-    sede,
-    genero,
-    COUNT(*) AS conciertos,
+    sede, genero, COUNT(*) AS conciertos,
     ROUND(100.0 * (SUM(ingreso_estimado_mxn) - SUM(pago_artistas_mxn) - SUM(gastos_produccion_mxn))
           / SUM(ingreso_estimado_mxn), 1) AS margen_pct
 FROM conciertos
@@ -88,33 +80,19 @@ HAVING COUNT(*) >= 3
 ORDER BY margen_pct DESC
 LIMIT 8;
 
--- Resultado (top 3):
--- Auditorio de la Ribera + Jazz Tradicional        | 3 conciertos | 57.4%  <- el combo ganador
--- La Cochera Cultural + Jazz Tradicional            | 12 conciertos | 34.0%
--- La Cochera Cultural + Improvisación libre         |  7 conciertos | 25.8%
---
--- Nota de rigor: el combo ganador tiene solo 3 conciertos — dato
--- direccional, no concluyente. Pero el patrón se sostiene: en
--- ambas sedes, Jazz Tradicional es el género de mejor margen.
-
 
 -- ============================================================
 -- HALLAZGO
 -- ============================================================
--- "El género que más programas no es el que más rinde — Jazz
---  Tradicional genera 43.5% de margen con solo el 13% de tus
---  conciertos, mientras tu género insignia rinde 18.1%."
+-- "Jazz Tradicional sigue siendo el género más rentable (44.8%),
+--  pero la brecha con el género insignia (Jazz Contemporáneo
+--  Original, 25.4%) se cerró bastante al capturar patrocinios reales
+--  — una señal de que parte de la brecha original era un problema
+--  de datos incompletos, no solo de mezcla de programación."
 --
--- La Cochera Cultural es el motor de volumen de Rezzonante (89 de
--- 132 conciertos, 69% del ingreso histórico), y seguirá siéndolo.
--- Pero el Auditorio de la Ribera y Garden of Dreams —sedes que usas
--- con poca frecuencia— generan 3-3.2x más ingreso por evento, y la
--- combinación Auditorio + Jazz Tradicional es, con la muestra
--- disponible, tu configuración más rentable (57.4%).
---
--- Esto no sugiere abandonar Jazz Contemporáneo Original —sigue
--- siendo el corazón artístico del proyecto— sino una pregunta
--- concreta para 2027: ¿aumentar la frecuencia de programación de
--- Jazz Tradicional, y explorar más eventos en sedes premium como el
--- Auditorio, mejoraría el margen general sin sacrificar identidad?
+-- La Cochera Cultural sigue siendo el motor de volumen (89 de 133
+-- eventos), y el Auditorio de la Ribera y Garden of Dreams generan
+-- 2.3-3x más ingreso por evento cuando se usan. La pregunta de 2027
+-- se mantiene: ¿aumentar la frecuencia de Jazz Tradicional y de
+-- sedes premium mejoraría el margen general?
 -- ============================================================
