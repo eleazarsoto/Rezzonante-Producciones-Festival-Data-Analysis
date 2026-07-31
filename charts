@@ -1,3 +1,0 @@
-git add charts/
-git commit -m "Add BigQuery/Looker Studio charts"
-git push
