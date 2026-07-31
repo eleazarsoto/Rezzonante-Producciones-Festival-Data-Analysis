@@ -235,3 +235,4 @@ SQLite · SQLiteViz · Google Sheets/Excel (openpyxl) · Python (pandas) · Matp
 ### Lo que sigue
 
 Scripts de Python para el pipeline de limpieza de datos (actualmente ad-hoc), un diagrama entidad-relación del esquema, una Métrica Norte definida para el dashboard, y hallazgos con nivel de confianza marcado (señalando qué insights son de alta certeza vs. direccionales) conforme madure el análisis.
+
